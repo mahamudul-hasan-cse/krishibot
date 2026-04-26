@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.database import AnalysisLog
 from schemas.schemas import AnalysisResponse, MarketContext, PDFReportRequest
-from services import image_service, ollama_service, prompt_builder, market_service
+from services import image_service, llm_service, prompt_builder, market_service
 from services.pdf_service import generate_disease_report_pdf
 from services.plant_classifier import classify_plant_image
 
@@ -195,7 +195,7 @@ disagree.
     # --- 5. Run text model with filename-derived crop hint ---
     filename = file.filename or "unknown"
     prompt = prompt_builder.build_image_analysis_prompt(filename) + vision_context
-    raw_response = await ollama_service.analyze_image(b64, prompt)
+    raw_response = await llm_service.analyze_image(b64, prompt)
 
     if not raw_response:
         raise HTTPException(

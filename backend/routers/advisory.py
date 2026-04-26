@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 
 from schemas.schemas import AdvisoryRequest, AdvisoryResponse
-from services import ollama_service, prompt_builder
+from services import llm_service, prompt_builder
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ async def query_advisory(body: AdvisoryRequest) -> AdvisoryResponse:
 
     tokens: list[str] = []
     try:
-        async for token in ollama_service.chat_stream(messages, system_prompt):
+        async for token in llm_service.chat_stream(messages, system_prompt):
             tokens.append(token)
     except HTTPException:
         raise

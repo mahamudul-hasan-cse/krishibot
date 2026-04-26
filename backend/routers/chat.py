@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.database import ChatMessage, ChatSession
 from schemas.schemas import ChatHistoryResponse, ChatMessageRequest, ChatMessageResponse
-from services import ollama_service, prompt_builder
+from services import llm_service, prompt_builder
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ async def _sse_generator(
     # 3. Stream tokens and accumulate the full reply for persistence.
     full_reply: list[str] = []
     try:
-        async for token in ollama_service.chat_stream(messages, system_prompt):
+        async for token in llm_service.chat_stream(messages, system_prompt):
             full_reply.append(token)
             # Escape any embedded newlines so they don't break the SSE framing.
             safe_token = token.replace("\n", "\\n")

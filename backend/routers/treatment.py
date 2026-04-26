@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.database import TreatmentCalendar
 from schemas.schemas import TreatmentRequest
-from services import ollama_service
+from services import llm_service
 from datetime import datetime
 import json
 
@@ -32,7 +32,7 @@ Respond ONLY in this exact JSON with no extra text outside the JSON:
     "follow_up": "Advice after treatment ends"
 }}"""
 
-    full_response = await ollama_service.analyze_image("", prompt)
+    full_response = await llm_service.analyze_image("", prompt)
 
     try:
         clean = full_response.strip()

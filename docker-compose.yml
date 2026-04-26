@@ -5,13 +5,22 @@ services:
       dockerfile: Dockerfile
     container_name: krishibot-backend
     restart: unless-stopped
-    # No published ports — Caddy reaches it via the internal network.
+    # Expose internally (for Caddy). Also publish on localhost so the API
+    # is directly callable for development / health checks. Caddy is still
+    # the public entrypoint on the droplet (ports 80/443).
     expose:
       - "8000"
+    ports:
+      - "127.0.0.1:8000:8000"
+    # App secrets and per-environment overrides live in backend/.env
+    # (gitignored). Compose loads them straight into the container.
+    env_file:
+      - ./backend/.env
+    # Pinned overrides: these always take precedence over backend/.env.
+    # DATABASE_URL must point at the volume mount; CORS_ORIGINS is set by
+    # the host operator (different per deployment); DEBUG=False in prod.
     environment:
       - DATABASE_URL=sqlite:////app/data/krishibot.db
-      - OLLAMA_URL=${OLLAMA_URL:-http://localhost:11434}
-      - OLLAMA_TEXT_MODEL=${OLLAMA_TEXT_MODEL:-qwen2.5:3b}
       - DEBUG=False
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
     volumes:

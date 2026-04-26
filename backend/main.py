@@ -26,7 +26,7 @@ from database import init_db                          # noqa: E402
 from routers import advisory, analyze, chat, community, weather  # noqa: E402
 from routers.treatment import router as treatment_router  # noqa: E402
 from routers.stats import router as stats_router  # noqa: E402
-from services.ollama_service import check_ollama_health  # noqa: E402
+from services.llm_service import check_health as check_llm_health  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -126,19 +126,17 @@ async def root() -> dict[str, str]:
     return {"status": "ok", "message": "KrishiBot API is running"}
 
 
-@app.get("/health", tags=["Meta"], summary="Detailed health check including Ollama status")
-async def health_check() -> dict[str, str | bool]:
+@app.get("/health", tags=["Meta"], summary="Detailed health check including LLM provider status")
+async def health_check() -> dict[str, object]:
     """
-    Report the health of the API and the downstream Ollama inference server.
+    Report API health plus the reachability of both LLM providers.
 
     Response fields:
-    - ``api``: always ``"ok"`` if this endpoint is reachable.
-    - ``ollama``: ``true`` if Ollama responds to ``GET /api/tags``, else ``false``.
-    - ``ollama_status``: human-readable string for display in dashboards.
+    - ``api``: always ``"ok"`` if this endpoint responds.
+    - ``ollama``: ``true`` if local Ollama responds.
+    - ``openrouter``: ``true`` if OpenRouter responds with a valid API key.
+    - ``openrouter_configured``: ``true`` if OPENROUTER_API_KEY is set.
+    - ``active_provider``: which one will be used right now ("ollama", "openrouter", or "none").
     """
-    ollama_ok = await check_ollama_health()
-    return {
-        "api": "ok",
-        "ollama": ollama_ok,
-        "ollama_status": "reachable" if ollama_ok else "unreachable — start Ollama and pull the required models",
-    }
+    llm = await check_llm_health()
+    return {"api": "ok", **llm}
