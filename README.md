@@ -6,6 +6,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-Local%20AI-FF6B35?style=flat)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat&logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat)
 
 > **An offline-first AI agricultural assistant for smallholder farmers in South Asia — powered by a local LLM, bilingual (English & বাংলা), no cloud, no API keys.**
@@ -24,6 +25,7 @@ Built as a Final Year Project to demonstrate how open-source LLMs can address re
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Running the Project](#running-the-project)
+- [Run Backend with Docker](#run-backend-with-docker)
 - [Project Structure](#project-structure)
 - [API Reference](#api-reference)
 - [Environment Variables](#environment-variables)
@@ -185,6 +187,101 @@ cd frontend
 npm run dev
 ```
 App: `http://localhost:3000`
+
+---
+
+## Run Backend with Docker
+
+A `Dockerfile` and `docker-compose.yml` are included so you can run the FastAPI backend in a container — useful for production deployments (DigitalOcean, AWS, Render, etc.) and for testing the exact image you'll ship.
+
+### What's in the box
+
+| File | Purpose |
+|---|---|
+| [`backend/Dockerfile`](backend/Dockerfile) | Multi-stage Python 3.11-slim image; installs **CPU-only PyTorch** (~200 MB instead of ~800 MB), runs as non-root `krishi` user, includes a healthcheck |
+| [`backend/.dockerignore`](backend/.dockerignore) | Excludes `venv/`, `__pycache__/`, `*.db`, `.env` — keeps the image small and free of secrets |
+| [`docker-compose.yml`](docker-compose.yml) | Orchestrates the backend container, mounts a host `./data/` volume for SQLite persistence, binds port 8000 to localhost only |
+
+### Prerequisites
+
+- Docker Desktop (Windows / macOS) or Docker Engine + Compose plugin (Linux)
+- ~2 GB free disk space for the image
+
+### Build and run
+
+From the **repo root**:
+
+```bash
+docker compose up --build
+```
+
+First build takes ~5-10 minutes (downloads `python:3.11-slim`, CPU PyTorch, and your Python deps). Subsequent builds are seconds thanks to layer caching.
+
+When you see `KrishiBot API started successfully.` and `Uvicorn running on http://0.0.0.0:8000`, the backend is ready.
+
+Test it:
+
+```bash
+curl http://localhost:8000/
+curl http://localhost:8000/health
+```
+
+Or open **http://localhost:8000/docs** for the Swagger UI.
+
+### Run in the background
+
+```bash
+docker compose up -d --build      # detached
+docker compose logs -f backend    # tail logs
+docker compose down               # stop & remove
+```
+
+### How it's wired
+
+```
+┌───────────────────────────────────────────────────────────┐
+│ Host (your laptop / droplet)                              │
+│                                                            │
+│  ./data/krishibot.db   ◄───────┐                          │
+│                                │  volume mount             │
+│  127.0.0.1:8000  ◄────┐        │                          │
+│                       │        │                          │
+│  ┌────────────────────▼────────▼──────────────────────┐   │
+│  │ Container: krishibot-backend                       │   │
+│  │   uvicorn main:app --workers 2  →  port 8000       │   │
+│  │   /app/data/krishibot.db (SQLite, persisted)       │   │
+│  │   EfficientNet-B0 weights baked into image         │   │
+│  │   Reads CORS_ORIGINS, OLLAMA_URL from env          │   │
+│  └────────────────────────────────────────────────────┘   │
+└───────────────────────────────────────────────────────────┘
+```
+
+- **Port binding**: `127.0.0.1:8000:8000` — the API is only reachable from the host. In production, put a reverse proxy (Caddy / nginx) in front for HTTPS.
+- **Data volume**: `./data/` on the host maps to `/app/data/` inside the container, so the SQLite DB survives container rebuilds.
+- **Non-root user**: container runs as UID 1000 (`krishi`) for safety.
+- **Healthcheck**: Docker probes `GET /` every 30s; the container is marked `unhealthy` if the API stops responding.
+
+### Configuring the container
+
+Override defaults via environment variables (set them in your shell or in a `.env` file next to `docker-compose.yml`):
+
+| Variable | Default | Description |
+|---|---|---|
+| `CORS_ORIGINS` | `http://localhost:3000` | Comma-separated list of allowed frontend origins. Set to your deployed frontend URL in prod. |
+| `OLLAMA_URL` | `http://localhost:11434` | Where to reach Ollama. The container itself doesn't run Ollama — point this at a host/remote Ollama instance, or swap `services/ollama_service.py` for a hosted LLM API (Groq, OpenRouter, etc.). |
+| `OLLAMA_TEXT_MODEL` | `qwen2.5:3b` | Model name passed to Ollama. |
+| `DATABASE_URL` | `sqlite:////app/data/krishibot.db` | Override to point at PostgreSQL in production. |
+| `DEBUG` | `False` | Set `True` for verbose error output during development. |
+
+### Production deployment notes
+
+When deploying to a cloud VM (DigitalOcean droplet, AWS EC2, etc.):
+
+1. **PyTorch wheel**: the Dockerfile already pulls the CPU-only build via `--extra-index-url https://download.pytorch.org/whl/cpu`. Keep this — the GPU build is ~600 MB larger and won't run on a CPU droplet.
+2. **Database**: SQLite + a host volume works for low traffic. For multi-worker setups under load, switch to managed PostgreSQL by overriding `DATABASE_URL`.
+3. **Ollama is not in the container.** It's a separate process and `qwen2.5:3b` needs ~3-4 GB RAM by itself. Either run Ollama on a separate machine and point `OLLAMA_URL` at it, or replace the LLM client with a hosted API.
+4. **Reverse proxy**: terminate TLS at Caddy / nginx and proxy to `127.0.0.1:8000`. Don't expose port 8000 publicly.
+5. **Swap**: on a 2 GB droplet, add 2 GB swap before first build — PyTorch installation can briefly spike past available RAM.
 
 ---
 

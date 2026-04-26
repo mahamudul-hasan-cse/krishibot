@@ -10,6 +10,7 @@ Startup sequence:
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
 
@@ -83,10 +84,18 @@ app = FastAPI(
 # Middleware
 # ---------------------------------------------------------------------------
 
+# Comma-separated list of allowed origins for production, e.g.:
+#   CORS_ORIGINS=https://krishibot.vercel.app,https://www.krishibot.com
+_cors_origins = [
+    o.strip()
+    for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    # Accept any localhost / 127.0.0.1 port so the app works regardless of
-    # which port Next.js picks (3000, 3001, 3002, …) during development.
+    allow_origins=_cors_origins,
+    # Also accept any localhost port so dev still works regardless of Next.js port.
     allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],

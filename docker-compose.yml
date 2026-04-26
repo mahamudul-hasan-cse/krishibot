@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: krishibot-backend
+    restart: unless-stopped
+    # Bind only to localhost; a reverse proxy (Caddy/nginx) will face the internet.
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/data/krishibot.db
+      - OLLAMA_URL=${OLLAMA_URL:-http://localhost:11434}
+      - OLLAMA_TEXT_MODEL=${OLLAMA_TEXT_MODEL:-qwen2.5:3b}
+      - DEBUG=False
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+    volumes:
+      # SQLite DB lives on the host so it survives container rebuilds.
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
