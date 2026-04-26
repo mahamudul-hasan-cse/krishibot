@@ -1,0 +1,19 @@
+# Caddyfile — auto-issues a free Let's Encrypt SSL cert for the sslip.io
+# hostname mapped to this droplet's public IP.
+#
+# How sslip.io works: any hostname of the form a-b-c-d.sslip.io resolves
+# to the IPv4 address a.b.c.d. No DNS setup required.
+#
+# Override DOMAIN at runtime if you switch to a real domain later, e.g.:
+#   DOMAIN=api.krishibot.com docker compose up -d
+{$DOMAIN:64-227-145-40.sslip.io} {
+    # Forward all traffic to the backend service inside the compose network.
+    reverse_proxy backend:8000
+
+    # Sensible defaults for an API: don't cache, allow large uploads.
+    request_body {
+        max_size 20MB
+    }
+
+    encode gzip
+}

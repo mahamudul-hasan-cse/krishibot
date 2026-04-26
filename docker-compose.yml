@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile
     container_name: krishibot-backend
     restart: unless-stopped
-    # Bind only to localhost; a reverse proxy (Caddy/nginx) will face the internet.
-    ports:
-      - "127.0.0.1:8000:8000"
+    # No published ports — Caddy reaches it via the internal network.
+    expose:
+      - "8000"
     environment:
       - DATABASE_URL=sqlite:////app/data/krishibot.db
       - OLLAMA_URL=${OLLAMA_URL:-http://localhost:11434}
@@ -23,3 +23,25 @@ services:
       timeout: 5s
       start_period: 60s
       retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: krishibot-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Override at runtime when you switch to a real domain:
+      #   DOMAIN=api.example.com docker compose up -d
+      - DOMAIN=${DOMAIN:-64-227-145-40.sslip.io}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  caddy_data:
+  caddy_config:
