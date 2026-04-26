@@ -18,9 +18,10 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models.database import AnalysisLog
-from schemas.schemas import AnalysisResponse, PDFReportRequest
+from schemas.schemas import AnalysisResponse, MarketContext, PDFReportRequest
 from services import image_service, ollama_service, prompt_builder, market_service
 from services.pdf_service import generate_disease_report_pdf
+from services.plant_classifier import classify_plant_image
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +155,28 @@ async def analyze_image(
             detail=f"File too large ({len(file_bytes) // 1024} KB). Maximum allowed: 10 MB.",
         )
 
+    # ── Vision model classification ─────────────────────────
+    vision_result = classify_plant_image(file_bytes)
+    vision_context = ""
+
+    if vision_result.get("available") and vision_result.get("disease_name"):
+        vision_context = f"""
+COMPUTER VISION MODEL RESULT (EfficientNet-B0):
+The vision classifier analyzed the image and detected:
+- Detected Crop: {vision_result.get('crop', 'Unknown')}
+- Detected Disease: {vision_result.get('disease_name', 'Unknown')}
+- Confidence Score: {vision_result.get('confidence_score', 0)}%
+- Confidence Level: {vision_result.get('confidence', 'Medium')}
+- Is Diseased: {vision_result.get('is_diseased', False)}
+
+Use this computer vision result as the PRIMARY basis
+for your JSON response. Your role is to provide detailed
+symptoms, treatment steps, and prevention tips based on
+the detected disease. Set disease_name to match the
+vision model result unless you have strong reason to
+disagree.
+"""
+
     # --- 3. Validate image bytes ---
     if not image_service.validate_image(file_bytes):
         raise HTTPException(
@@ -171,7 +194,7 @@ async def analyze_image(
 
     # --- 5. Run text model with filename-derived crop hint ---
     filename = file.filename or "unknown"
-    prompt = prompt_builder.build_image_analysis_prompt(filename)
+    prompt = prompt_builder.build_image_analysis_prompt(filename) + vision_context
     raw_response = await ollama_service.analyze_image(b64, prompt)
 
     if not raw_response:
@@ -182,6 +205,13 @@ async def analyze_image(
 
     # --- 6. Parse ---
     analysis_result = _parse_model_response(raw_response, filename)
+
+    # Attach vision model results
+    analysis_result.vision_model_disease = vision_result.get("disease_name") if vision_result.get("available") else None
+    analysis_result.vision_confidence_score = vision_result.get("confidence_score") if vision_result.get("available") else None
+    analysis_result.vision_top5 = vision_result.get("top5_alternatives") if vision_result.get("available") else None
+    analysis_result.vision_model_used = vision_result.get("model_name") if vision_result.get("available") else None
+    analysis_result.vision_available = vision_result.get("available", False)
 
     result = analysis_result.model_dump()
 
@@ -212,7 +242,7 @@ async def analyze_image(
                 disease_name=analysis_result.disease_name,
                 severity_stage=severity_stage,
             )
-            analysis_result.market_context = market_data
+            analysis_result.market_context = MarketContext(**market_data)
         except Exception as exc:
             # Market context enrichment failure should not block the API response
             logger.exception("Failed to enrich market context for %s", filename)

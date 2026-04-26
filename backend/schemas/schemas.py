@@ -62,7 +62,13 @@ class AnalysisResponse(BaseModel):
     # The raw LLM output — useful for debugging and logging
     raw_response: str
     # Financial viability of treatment (optional, added by analyze endpoint)
-    market_context: "MarketContext | None" = None
+    market_context: Optional[MarketContext] = None
+    # Computer vision (EfficientNet-B0) results
+    vision_model_disease: Optional[str] = None
+    vision_confidence_score: Optional[float] = None
+    vision_top5: Optional[list] = None
+    vision_model_used: Optional[str] = None
+    vision_available: Optional[bool] = False
 
 
 # ---------------------------------------------------------------------------

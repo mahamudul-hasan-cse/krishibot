@@ -49,6 +49,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # ---- startup ----
     logger.info("Initialising database tables…")
     init_db()
+
+    # Pre-load the vision classifier on startup
+    try:
+        from services.plant_classifier import load_model
+        load_model()
+        logger.info("Plant vision classifier loaded")
+    except Exception as e:
+        logger.warning(f"Vision classifier not loaded: {e}")
+
     logger.info("KrishiBot API started successfully.")
     yield
     # ---- shutdown ----

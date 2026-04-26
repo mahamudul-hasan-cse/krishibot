@@ -178,6 +178,62 @@ export default function DiseaseReportCard({ result }: Props) {
       {/* ── Body ── */}
       <div className="px-6 py-5 space-y-6">
 
+        {result.vision_available && result.vision_model_disease && (
+          <div className="mb-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
+
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-purple-600 rounded-md flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">V</span>
+                </div>
+                <span className="text-xs font-bold text-purple-800 uppercase tracking-wide">
+                  Vision Model Detection
+                </span>
+              </div>
+              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium border border-purple-200">
+                {result.vision_model_used || "EfficientNet-B0"}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold text-purple-900">
+                {result.vision_model_disease}
+              </span>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full
+                ${(result.vision_confidence_score || 0) >= 75
+                  ? "bg-green-100 text-green-700"
+                  : (result.vision_confidence_score || 0) >= 45
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-red-100 text-red-700"}`}>
+                {result.vision_confidence_score}% confidence
+              </span>
+            </div>
+
+            <div className="w-full bg-purple-100 rounded-full h-1.5 mb-3">
+              <div
+                className="h-1.5 rounded-full bg-purple-500 transition-all duration-700"
+                style={{ width: `${result.vision_confidence_score || 0}%` }}
+              />
+            </div>
+
+            {result.vision_top5 && result.vision_top5.length > 0 && (
+              <div>
+                <p className="text-xs text-purple-600 font-medium mb-1">
+                  Other possibilities:
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {result.vision_top5.slice(0, 3).map((alt, i) => (
+                    <span key={i}
+                      className="text-xs bg-white text-purple-700 px-2 py-0.5 rounded-full border border-purple-200">
+                      {alt.disease} ({alt.probability}%)
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <ConfidenceBar confidence={confidence} />
 
         <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">

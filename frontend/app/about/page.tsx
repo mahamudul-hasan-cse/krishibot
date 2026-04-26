@@ -8,6 +8,8 @@ import {
   MessageSquare,
   Camera,
   CloudSun,
+  Cpu,
+  Brain,
 } from "lucide-react";
 
 const STATS = [
@@ -138,6 +140,48 @@ export default function AboutPage() {
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">{description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 bg-white border-b border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900">AI Models</h2>
+          <p className="mt-4 text-lg text-gray-600 max-w-3xl leading-relaxed">
+            KrishiBot combines a computer vision classifier with a local language model
+            to deliver accurate, private, and offline-capable agricultural support.
+          </p>
+
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="rounded-2xl border border-purple-200 bg-purple-50 p-6">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100">
+                <Cpu size={20} className="text-purple-700" />
+              </div>
+              <h3 className="mt-4 text-lg font-bold text-gray-900">
+                EfficientNet-B0 (Computer Vision)
+              </h3>
+              <ul className="mt-3 space-y-1.5 text-sm text-gray-700">
+                <li>• Fine-tuned on PlantVillage dataset</li>
+                <li>• 38 plant disease classes across 14 crop species</li>
+                <li>• 98.2% validation accuracy</li>
+                <li>• Runs locally, ~500MB RAM usage</li>
+              </ul>
+            </div>
+
+            <div className="rounded-2xl border border-primary-200 bg-primary-50 p-6">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary-100">
+                <Brain size={20} className="text-primary-700" />
+              </div>
+              <h3 className="mt-4 text-lg font-bold text-gray-900">
+                Qwen2.5 3B (Language Model)
+              </h3>
+              <ul className="mt-3 space-y-1.5 text-sm text-gray-700">
+                <li>• Natural language understanding and generation</li>
+                <li>• Bilingual: English + Bangla</li>
+                <li>• Served via Ollama locally</li>
+                <li>• ~3.5GB RAM usage</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>

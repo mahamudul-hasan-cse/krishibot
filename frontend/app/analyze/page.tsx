@@ -199,7 +199,11 @@ export default function AnalyzePage() {
             {!isAnalyzing && analysisResult && (
               <>
                 <DiseaseReportCard result={analysisResult} />
-                {analysisResult?.is_diseased && (
+                {analysisResult && (
+                  analysisResult.is_diseased ||
+                  analysisResult.severity_stage === 'Moderate' ||
+                  analysisResult.severity_stage === 'Severe'
+                ) && (
                   <div className="mt-6">
                     <TreatmentCalendar
                       diseaseName={analysisResult.disease_name}

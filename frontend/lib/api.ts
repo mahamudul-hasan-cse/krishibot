@@ -20,6 +20,15 @@ export interface AnalysisResponse {
   prevention: string[];
   raw_response?: string;
   market_context?: MarketContext;
+  vision_model_disease?: string;
+  vision_confidence_score?: number;
+  vision_top5?: {
+    disease: string;
+    crop: string;
+    probability: number;
+  }[];
+  vision_model_used?: string;
+  vision_available?: boolean;
 }
 
 export interface MarketContext {
