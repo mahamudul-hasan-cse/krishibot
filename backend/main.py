@@ -134,9 +134,9 @@ async def health_check() -> dict[str, object]:
     Response fields:
     - ``api``: always ``"ok"`` if this endpoint responds.
     - ``ollama``: ``true`` if local Ollama responds.
-    - ``gemini``: ``true`` if Gemini responds with a valid API key.
-    - ``gemini_configured``: ``true`` if GEMINI_API_KEY is set.
-    - ``active_provider``: which one will be used right now ("ollama", "gemini", or "none").
+    - ``openrouter``: ``true`` if OpenRouter responds with a valid API key.
+    - ``openrouter_configured``: ``true`` if OPENROUTER_API_KEY is set.
+    - ``active_provider``: which one will be used right now ("ollama", "openrouter", or "none").
     """
     llm = await check_llm_health()
     return {"api": "ok", **llm}
