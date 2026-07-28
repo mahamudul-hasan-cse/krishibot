@@ -11,7 +11,7 @@ services:
     expose:
       - "8000"
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8001:8000"
     # App secrets and per-environment overrides live in backend/.env
     # (gitignored). Compose loads them straight into the container.
     env_file:
@@ -32,6 +32,19 @@ services:
       timeout: 5s
       start_period: 60s
       retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8001}
+    container_name: krishibot-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
 
   caddy:
     image: caddy:2-alpine
