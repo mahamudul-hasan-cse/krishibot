@@ -460,6 +460,12 @@ For major changes, please open an issue first to discuss what you'd like to chan
 MIT License — free to use, modify, and distribute with attribution.
 
 ---
+## 👤 Author
+
+**Md. Mahamudul Hasan**
+
+- GitHub: [@mahamudul-hasan-cse](https://github.com/mahamudul-hasan-cse)
+---
 
 ## Acknowledgements
 
