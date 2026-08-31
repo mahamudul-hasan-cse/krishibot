@@ -15,8 +15,10 @@ KrishiBot helps farmers detect crop diseases from photos, ask farming questions 
 
 Built as a Final Year Project to demonstrate how open-source LLMs can address real agricultural problems for users who can't rely on cloud services.
 
+Demo video link: https://youtu.be/Dzb5Jo8-dI0?si=8cljXC9g7PEnaDNx        
+Live Project:
+https://krishibot-sandy-three.vercel.app
 ---
-
 ## Table of Contents
 
 - [Features](#features)
@@ -43,6 +45,8 @@ Built as a Final Year Project to demonstrate how open-source LLMs can address re
 - **Multi-session chat history** — sidebar with persisted conversations, auto-titled from the first message
 - **Voice input** — Web Speech API support for hands-free questions
 - **Individual and bulk delete** for chat history
+  
+<img width="1672" height="941" alt="Krishi-bot-image" src="https://github.com/user-attachments/assets/f70aaae1-3c34-40c2-80d9-4eaccf4f1bc7" />
 
 ### Crop Disease Detection
 - Upload a leaf / crop photo → structured JSON disease diagnosis
@@ -50,6 +54,8 @@ Built as a Final Year Project to demonstrate how open-source LLMs can address re
 - Severity staging (Early / Moderate / Severe) + confidence rating
 - **Market context** — calculates financial viability: crop value, projected loss, treatment cost, net saving, ROI verdict
 - **PDF report export** via ReportLab
+
+<img width="1672" height="941" alt="Krishi-bot-image2" src="https://github.com/user-attachments/assets/a58bfe47-69ab-459b-9321-e0d1d394fa95" />
 
 ### Treatment Calendar
 - Auto-generated **14-day treatment schedule** per detected disease
